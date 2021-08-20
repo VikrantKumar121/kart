@@ -32,9 +32,10 @@ def store_view(request, category_slug = None):
 def product_view(request, category_slug = None, product_id = None):
     """"""
     try:
-        product = Product.objects.get(category__slug = category_slug, pk = product_id)
+        product = get_object_or_404(Product, category__slug = category_slug, pk = product_id)
     except Exception as e:
         raise e
+        
     context = {
         'product' : product,
     }
