@@ -1,6 +1,9 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Product
 from category.models import Category
+from cart.models import CartItem
+from cart.views import _get_cart_id
+from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
 # Create your views here.
 
 def store_view(request, category_slug = None):
@@ -14,16 +17,23 @@ def store_view(request, category_slug = None):
 
     if category_slug != None:
         search_category = get_object_or_404(Category, slug = category_slug)
-        products = Product.objects.filter(is_avail = True, category = search_category)
+        products = Product.objects.filter(is_avail = True, category = search_category).order_by('id')
 
     else:
-        products = Product.objects.filter(is_avail = True)
+        products = Product.objects.filter(is_avail = True).order_by('id')
+
+    paginator = Paginator(products, 6)
+    page  = request.GET.get('page')
+    page_products = paginator.get_page(page)
+    # if page == None:
+    #     page_products = products
+    # print(page)
 
     no_of_items = len(products)
 
     context = {
         'categories': categories,
-        'products' : products,
+        'products' : page_products,
         "no_of_items": no_of_items,
     }
 
@@ -33,11 +43,13 @@ def product_view(request, category_slug = None, product_id = None):
     """"""
     try:
         product = get_object_or_404(Product, category__slug = category_slug, pk = product_id)
+        in_cart = CartItem.objects.filter(cart__cart_no = _get_cart_id(request), product = product).exists()
     except Exception as e:
         raise e
-        
+
     context = {
         'product' : product,
+        'in_cart' : in_cart,
     }
 
     return render(request, 'store/product_detail.html', context)
