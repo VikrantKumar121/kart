@@ -21,5 +21,8 @@ class CartItem(models.Model):
     is_active = models.BooleanField(default = True)
     added_on = models.DateTimeField(auto_now_add = True)
 
+    def sub_total(self):
+        return self.quantity * self.product.price
+
     def __str__(self):
         return self.product.product_name
