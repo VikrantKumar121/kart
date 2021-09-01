@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Cart, CartItem
-from store.models import Product
+from store.models import Product, Variation
 
 # Create your views here.
 
@@ -11,11 +11,13 @@ def _get_cart_id(request):
         id = request.session.create()
     return id
 
-def add_cart(request, product_pk = None):
+def add_cart(request, product_pk = None, color = None, size = None):
     """"""
     product = get_object_or_404(Product, id = product_pk)
+    variation = get_object_or_404(Variation, product = product, color = color, size = size)
     cur_cart = None
     cart_item = None
+
     try:
         cur_cart = Cart.objects.get(cart_no = _get_cart_id(request))
     except Cart.DoesNotExist :
@@ -25,25 +27,27 @@ def add_cart(request, product_pk = None):
         cur_cart.save()
 
     try:
-        cart_item = CartItem.objects.get(cart = cur_cart, product = product)
+        cart_item = CartItem.objects.get(cart = cur_cart, product = product, variation = variation)
         cart_item.quantity += 1
         cart_item.save()
     except CartItem.DoesNotExist :
         cart_item = CartItem.objects.create(
             product = product,
             cart = cur_cart,
+            variation = variation,
         )
         cart_item.save()
 
     return redirect('cart')
 
-def remove_cart(request, product_pk = None):
+def remove_cart(request, product_pk = None, color = None, size = None):
     """"""
     product = get_object_or_404(Product, id = product_pk)
+    variation = get_object_or_404(Variation, product = product, color = color, size = size)
     cart = Cart.objects.get(cart_no = _get_cart_id(request))
     cart_item = None
     try:
-        cart_item = CartItem.objects.get(cart = cart, product = product)
+        cart_item = CartItem.objects.get(cart = cart, product = product, variation = variation)
         cart_item.quantity -= 1
         cart_item.save()
         if cart_item.quantity < 1 :
@@ -53,13 +57,14 @@ def remove_cart(request, product_pk = None):
 
     return redirect('cart')
 
-def remove_cart_all(request, product_pk = None):
+def remove_cart_all(request, product_pk = None, color = None, size = None):
     """"""
     product = get_object_or_404(Product, id = product_pk)
+    variation = get_object_or_404(Variation, product = product, color = color, size = size)
     cart = Cart.objects.get(cart_no = _get_cart_id(request))
     cart_item = None
     try:
-        cart_item = CartItem.objects.get(cart = cart, product = product)
+        cart_item = CartItem.objects.get(cart = cart, product = product, variation = variation)
         cart_item.quantity = 0
         cart_item.delete()
     except Cart.DoesNotExist :
@@ -69,7 +74,10 @@ def remove_cart_all(request, product_pk = None):
 
 def cart_view(request):
     """"""
-    cart = Cart.objects.get(cart_no = _get_cart_id(request) )
+    try:
+        cart = Cart.objects.get(cart_no = _get_cart_id(request))
+    except Cart.DoesNotExist:
+        cart = Cart.objects.create(cart_no = _get_cart_id(request))
     cart_items = CartItem.objects.filter(cart = cart, is_active = True )
     quantity = 0
     total = 0
