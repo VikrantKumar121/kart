@@ -32,7 +32,27 @@ class Product(models.Model):
     modified_date = models.DateTimeField(auto_now = True)
 
     def get_link(self):
-        return reverse('search_product', args = [self.category.slug, self.id])
+        return reverse('search_product', args = [self.id])
 
     def __str__(self):
         return self.product_name
+
+class Variation(models.Model):
+    """"""
+    product = models.ForeignKey(Product, on_delete = models.CASCADE)
+    color = models.CharField(max_length = 30)
+    gender = models.CharField(max_length = 30, choices = GENDER_LIST)
+    size = models.CharField(max_length = 30, choices = SIZE_LIST)
+    stock = models.IntegerField()
+    is_avail = models.BooleanField(default = True)
+    created_date = models.DateTimeField(auto_now_add = True)
+    modified_date = models.DateTimeField(auto_now = True)
+
+    class Meta:
+        unique_together = ('product','color','size',)
+
+    def __str__(self):
+        return self.color+' '+self.size
+
+    def get_link(self):
+        return reverse('variation', args = [self.product.id, self.color, self.size])
