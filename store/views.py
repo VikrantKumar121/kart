@@ -116,7 +116,6 @@ def variation_view(request, product_id = None, color = None, size = None):
         'product_size': size,
         'variate': variation,
     }
-    print(context)
 
     return render(request, 'store/product_detail.html', context)
 
