@@ -4,6 +4,7 @@ from .forms import RegistrationForm
 from django.contrib import messages
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
+import requests
 
 #
 from django.contrib.sites.shortcuts import get_current_site
@@ -74,7 +75,17 @@ def login(request):
         if user != None:
             auth.login(request, user)
             messages.success(request, 'Login successful')
-            return redirect('home')
+            url = request.META.get('HTTP_REFERER')
+            try :
+                query = requests.utils.urlparse(url).query
+                print('query', query)
+                params = dict(i.split('=') for i in query.split('&'))
+                print('params', params)
+                if params.get('next') != None:
+                    nxtPage = params['next']
+                    return redirect(nxtPage)
+            except:
+                return redirect('home')
         else:
             messages.error(request, 'Incorect credentials')
 
@@ -146,7 +157,7 @@ def resetpassword_validate(request, uidb64, token):
 
     if user != None and default_token_generator.check_token(user, token):
         request.session['uid'] = uid
-        print('++++++++++++++++',uid)
+
         messages.success(request, 'pls reset your password')
         return redirect('resetpassword')
     else:
@@ -162,7 +173,7 @@ def reset_password(request):
 
         if password == confirm_password:
             uid = request.session.get('uid')
-            print('-----------',uid)
+
             user = User.objects.get(pk = uid)
             user.set_password(password)
             user.save()

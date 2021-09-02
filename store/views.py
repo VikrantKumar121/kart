@@ -46,7 +46,10 @@ def product_view(request, product_id = None):
         product = get_object_or_404(Product,  pk = product_id)
         product_variations = Variation.objects.filter(product = product)
         variation = product_variations.first()
-        in_cart = CartItem.objects.filter(cart__cart_no = _get_cart_id(request), variation  = variation).exists()
+        if request.user.is_authenticated:
+            in_cart = CartItem.objects.filter(cart__user = request.user, variation  = variation).exists()
+        else:
+            in_cart = False
     except Exception as e:
         raise e
 
@@ -90,7 +93,10 @@ def variation_view(request, product_id = None, color = None, size = None):
         else:
             size = variation[0].size
             var_id = variation[0].id
-        in_cart = CartItem.objects.filter(cart__cart_no = _get_cart_id(request), variation  = var_id).exists()
+        if request.user.is_authenticated:
+            in_cart = CartItem.objects.filter(cart__user = request.user, variation  = var_id).exists()
+        else:
+            in_cart = False
     except Exception as e:
         raise e
 
