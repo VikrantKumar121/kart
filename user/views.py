@@ -78,9 +78,9 @@ def login(request):
             url = request.META.get('HTTP_REFERER')
             try :
                 query = requests.utils.urlparse(url).query
-                print('query', query)
+                # print('query', query)
                 params = dict(i.split('=') for i in query.split('&'))
-                print('params', params)
+                # print('params', params)
                 if params.get('next') != None:
                     nxtPage = params['next']
                     return redirect(nxtPage)
