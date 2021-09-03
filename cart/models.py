@@ -13,7 +13,7 @@ class Cart(models.Model):
 
 
     def __str__(self):
-        return self.cart_no
+        return self.user.first_name
 
 class CartItem(models.Model):
     """"""
