@@ -1,6 +1,8 @@
 from django.db import models
 from django.urls import reverse
 from category.models import Category
+from user.models import User
+from django.db.models import Avg
 
 # Create your models here.
 GENDER_LIST = [
@@ -37,6 +39,15 @@ class Product(models.Model):
     def __str__(self):
         return self.product_name
 
+    def avg_review(self):
+        """"""
+        reviews = Review.objects.filter(product=self, status=True).aggregate(average=Avg('rating'))
+        avg = 0
+        if reviews['average'] != None:
+            avg = float(reviews['average'])
+
+        return avg
+
 class Variation(models.Model):
     """"""
     product = models.ForeignKey(Product, on_delete = models.CASCADE)
@@ -56,3 +67,19 @@ class Variation(models.Model):
 
     def get_link(self):
         return reverse('variation', args = [self.product.id, self.color, self.size])
+
+class Review(models.Model):
+    """"""
+    product = models.ForeignKey(Product, on_delete = models.CASCADE)
+    # variation = models.ForeignKey(Variation, on_delete = models.CASCADE)
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+    subject = models.CharField(max_length = 100, blank=True)
+    review = models.CharField(max_length = 100, blank=True)
+    ip = models.CharField(max_length = 100, blank=True)
+    rating = models.FloatField()
+    status = models.BooleanField(default = True)
+    created_at = models.DateTimeField(auto_now_add = True)
+    updated_at = models.DateTimeField(auto_now = True)
+
+    def __str__(self):
+        return self.subject
