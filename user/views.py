@@ -1,10 +1,11 @@
-from django.shortcuts import render,redirect
-from .models import User
-from .forms import RegistrationForm
+from django.shortcuts import render,redirect,get_object_or_404
+from .models import User, UserProfile
+from .forms import RegistrationForm, UserForm, UserProfileForm
 from django.contrib import messages
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 import requests
+from order.models import Order, Payment, OrderProduct
 
 #
 from django.contrib.sites.shortcuts import get_current_site
@@ -118,7 +119,16 @@ def activate(request, uidb64, token):
 @login_required(login_url = 'login')
 def dashboard(request):
     """"""
-    return render(request, 'accounts/dashboard.html')
+    orders = Order.objects.filter(user = request.user, is_ordered =True).order_by('-created_at')
+    orders_count = orders.count()
+    user_profile = UserProfile.objects.get(user = request.user)
+    context = {
+        'orders_count': orders_count,
+        'orders': orders,
+        'user_profile':user_profile,
+    }
+
+    return render(request, 'accounts/dashboard.html', context)
 
 def forgot_password(request):
     """"""
@@ -184,3 +194,94 @@ def reset_password(request):
              messages.error(request, 'Password does not match')
 
     return render(request, 'accounts/resetpassword.html')
+
+@login_required(login_url='login')
+def my_order(request):
+    """"""
+    orders = Order.objects.filter(user = request.user, is_ordered =True).order_by('-created_at')
+    orders_count = orders.count()
+    context = {
+        'orders_count': orders_count,
+        'orders': orders,
+    }
+
+    return render(request, 'accounts/my_order.html', context)
+
+@login_required(login_url='login')
+def edit_profile(request):
+    """"""
+    userprofile = get_object_or_404(UserProfile, user=request.user)
+    if request.method == "POST":
+        user_form = UserForm(request.POST, instance=request.user)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance = userprofile)
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile updated')
+            return redirect('edit_profile')
+    else:
+        user_form = UserForm(instance=request.user)
+        profile_form = UserProfileForm(instance=userprofile)
+
+    context={
+        'user_form': user_form,
+        'profile_form': profile_form,
+    }
+
+    return render(request, 'accounts/edit_profile.html', context)
+
+@login_required(login_url='login')
+def change_password(request):
+    """"""
+    if request.method == "POST":
+        current_password = request.POST['current_password']
+        new_password = request.POST['new_password']
+        confirm_password = request.POST['confirm_password']
+
+        user = User.objects.get(id = request.user.id)
+
+        if new_password == confirm_password:
+            success = user.check_password(current_password)
+            if success:
+                user.set_password(new_password)
+                user.save()
+                # auth.logout(request)
+                messages.success(request, 'password changed')
+                return redirect('change_password')
+            else:
+                messages.error(request,'Invalid current password')
+                return redirect('change_password')
+        else:
+            messages.error(request, 'confirm password does not match')
+            return redirect('change_password')
+
+    return render(request,'accounts/change_password.html')
+
+@login_required(login_url='login')
+def order_detail(request, order_id):
+    """"""
+    # order_items = OrderProduct.objects.filter(order__order_no = order_id)
+    # payment_id =
+    # print(order_no, payment_id)
+
+    try:
+
+        order = Order.objects.get(order_no = order_id, is_ordered = True)
+        product = OrderProduct.objects.filter(order = order)
+
+        sub_total = order.order_total - order.tax
+
+        context = {
+            'order': order,
+            'products': product,
+            'payment': order.payment,
+            'subtotal': sub_total,
+            'order_total': order.order_total,
+            'tax': order.tax
+        }
+
+        return render(request,'accounts/order_detail.html',context)
+
+    except Order.DoesNotExist:
+        messages.error(request,'Could not find the order')
+        return redirect('my_order')

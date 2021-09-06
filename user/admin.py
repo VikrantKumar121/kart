@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import User, UserProfile
+from django.utils.html import format_html
 
 # Register your models here.
 class NewUserAdmin(UserAdmin):
@@ -34,4 +35,19 @@ class NewUserAdmin(UserAdmin):
     list_filter = []
     fieldsets = []
 
+class UserProfileAdmin(admin.ModelAdmin):
+    """"""
+    def thumbnail(self, object):
+        return format_html(f'<img src="{object.profile_pic.url}" width="30" style="border-radius:50%;">')
+
+    thumbnail.short_description = 'PRofile Picture'
+    list_display = [
+        # 'thumbnail',
+        'user',
+        'city',
+        'state',
+        'country'
+    ]
+
 admin.site.register(User,NewUserAdmin)
+admin.site.register(UserProfile,UserProfileAdmin)

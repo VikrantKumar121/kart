@@ -166,5 +166,5 @@ def order_complete(request):
         return render(request, 'order/order_complete.html', context)
 
     except (Order.DoesNotExist, Payment.DoesNotExist):
-        return render(request, 'order/order_complete.html')
-        # return redirect('home')
+        # return render(request, 'order/order_complete.html')
+        return redirect('home')
