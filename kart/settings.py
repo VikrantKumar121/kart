@@ -25,7 +25,7 @@ SECRET_KEY = SECRET_KEY_ENV
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['krenv.eba-gri6uaer.us-east-1.elasticbeanstalk.com','http://krenv.eba-gri6uaer.us-east-1.elasticbeanstalk.com/']
+ALLOWED_HOSTS = ['krenv.eba-gri6uaer.us-east-1.elasticbeanstalk.com','http://krenv.eba-gri6uaer.us-east-1.elasticbeanstalk.com/',]
 
 
 # Application definition
