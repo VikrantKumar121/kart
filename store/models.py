@@ -63,7 +63,7 @@ class Variation(models.Model):
         unique_together = ('product','color','size',)
 
     def __str__(self):
-        return self.color+' '+self.size
+        return self.product.product_name+' '+self.color+' '+self.size
 
     def get_link(self):
         return reverse('variation', args = [self.product.id, self.color, self.size])
@@ -83,3 +83,16 @@ class Review(models.Model):
 
     def __str__(self):
         return self.subject
+
+class ProductGallery(models.Model):
+    """"""
+    # product = models.ForeignKey(Product, on_delete = models.CASCADE, null = True)
+    variation = models.ForeignKey(Variation, on_delete = models.CASCADE)
+    image = models.ImageField(upload_to='store/products/variations', max_length = 255)
+    uploaded_on = models.DateTimeField(auto_now_add = True)
+
+    def __str__(self):
+        return self.variation.product.product_name+' '+self.variation.color+' '+self.variation.size
+
+    # def __inti__(self):
+    #     self.product = self.variation.product

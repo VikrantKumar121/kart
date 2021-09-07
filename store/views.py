@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product, Variation, Review
+from .models import Product, Variation, Review, ProductGallery
 from category.models import Category
 from cart.models import CartItem
 from cart.views import _get_cart_id
@@ -71,8 +71,9 @@ def product_view(request, product_id = None):
         all_color.add(var.color)
         if var.color == color:
             color_size.add(var.size)
-        
+
     reviews = Review.objects.filter(product = product)
+    gallery = ProductGallery.objects.filter(variation = variation)
 
     context = {
         'product' : product,
@@ -84,6 +85,7 @@ def product_view(request, product_id = None):
         'variate': variation,
         'is_ordered': is_ordered,
         'reviews': reviews,
+        'gallery': gallery,
     }
 
     return render(request, 'store/product_detail.html', context)
@@ -112,6 +114,8 @@ def variation_view(request, product_id = None, color = None, size = None):
             is_ordered = False
 
         reviews = Review.objects.filter(product = product)
+        gallery = ProductGallery.objects.filter(variation = variation)
+
     except Exception as e:
         raise e
 
@@ -138,6 +142,7 @@ def variation_view(request, product_id = None, color = None, size = None):
         'variate': variation,
         'is_ordered': is_ordered,
         'reviews': reviews,
+        'gallery': gallery,
     }
 
     return render(request, 'store/product_detail.html', context)
