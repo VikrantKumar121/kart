@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 from .config import *
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
@@ -25,7 +26,7 @@ SECRET_KEY = SECRET_KEY_ENV
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['krenv.eba-gri6uaer.us-east-1.elasticbeanstalk.com']
 
 
 # Application definition
@@ -94,15 +95,15 @@ DATABASES = {
 
         'ENGINE': 'django.db.backends.postgresql',
 
-        'NAME': DB_NAME,
+        'NAME': os.environ['RDS_DB_NAME'],
 
-        'USER': DB_USER,
+        'USER': os.environ['RDS_USERNAME'],
 
-        'PASSWORD': DB_PASSWORD,
+        'PASSWORD': os.environ['RDS_PASSWORD'],
 
-        'HOST': DB_HOST,
+        'HOST': os.environ['RDS_HOSTNAME'],
 
-        'PORT': DB_PORT,
+        'PORT': os.environ['RDS_PORT'],
 
     }
 
