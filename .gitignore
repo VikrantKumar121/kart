@@ -133,3 +133,8 @@ dmypy.json
 # temp
 5.1 greatkart_template/
 .5.1 greatkart_template/
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

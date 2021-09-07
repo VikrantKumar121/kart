@@ -1,10 +1,13 @@
-from django.shortcuts import render, get_object_or_404
-from .models import Product, Variation
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Product, Variation, Review, ProductGallery
 from category.models import Category
 from cart.models import CartItem
 from cart.views import _get_cart_id
 from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
 from django.db.models import Q
+from .forms import ReviewForm
+from django.contrib import messages
+from order.models import OrderProduct
 # Create your views here.
 
 def store_view(request, category_slug = None):
@@ -46,7 +49,12 @@ def product_view(request, product_id = None):
         product = get_object_or_404(Product,  pk = product_id)
         product_variations = Variation.objects.filter(product = product)
         variation = product_variations.first()
-        in_cart = CartItem.objects.filter(cart__cart_no = _get_cart_id(request), variation  = variation).exists()
+        if request.user.is_authenticated:
+            is_ordered = OrderProduct.objects.filter(user= request.user, product = product).exists()
+            in_cart = CartItem.objects.filter(cart__user = request.user, variation  = variation).exists()
+        else:
+            is_ordered = False
+            in_cart = False
     except Exception as e:
         raise e
 
@@ -64,6 +72,9 @@ def product_view(request, product_id = None):
         if var.color == color:
             color_size.add(var.size)
 
+    reviews = Review.objects.filter(product = product)
+    gallery = ProductGallery.objects.filter(variation = variation)
+
     context = {
         'product' : product,
         'in_cart' : in_cart,
@@ -72,6 +83,9 @@ def product_view(request, product_id = None):
         'product_color': color,
         'product_size': size,
         'variate': variation,
+        'is_ordered': is_ordered,
+        'reviews': reviews,
+        'gallery': gallery,
     }
 
     return render(request, 'store/product_detail.html', context)
@@ -90,7 +104,18 @@ def variation_view(request, product_id = None, color = None, size = None):
         else:
             size = variation[0].size
             var_id = variation[0].id
-        in_cart = CartItem.objects.filter(cart__cart_no = _get_cart_id(request), variation  = var_id).exists()
+
+        if request.user.is_authenticated:
+            in_cart = CartItem.objects.filter(cart__user = request.user, variation  = var_id).exists()
+            is_ordered = OrderProduct.objects.filter(user= request.user, product = product).exists()
+
+        else:
+            in_cart = False
+            is_ordered = False
+
+        reviews = Review.objects.filter(product = product)
+        gallery = ProductGallery.objects.filter(variation = variation)
+
     except Exception as e:
         raise e
 
@@ -115,6 +140,9 @@ def variation_view(request, product_id = None, color = None, size = None):
         'product_color': color,
         'product_size': size,
         'variate': variation,
+        'is_ordered': is_ordered,
+        'reviews': reviews,
+        'gallery': gallery,
     }
 
     return render(request, 'store/product_detail.html', context)
@@ -133,3 +161,28 @@ def search(request):
         "no_of_items": no_of_items,
     }
     return render(request, 'store/store.html', context)
+
+def submit_review(request, product_id=None):
+    """"""
+    url = request.META.get('HTTP_REFERER')
+    if request.method == "POST":
+        try:
+            review = Review.objects.get(user__id = request.user.id, product__id=product_id )
+            form = ReviewForm(request.POST, instance=review)
+            form.save()
+            messages.success(request, 'Review updated')
+
+        except Review.DoesNotExist:
+            form = ReviewForm(request.POST)
+            product = Product.objects.get(pk= product_id)
+            if form.is_valid():
+                data = Review()
+                data.subject = form.cleaned_data['subject']
+                data.review = form.cleaned_data['review']
+                data.rating = form.cleaned_data['rating']
+                data.ip = request.META.get('REMOTE_ADDR')
+                data.product = product
+                data.user = request.user
+                data.save()
+                messages.success(request, 'review submitted')
+        return redirect(url)
