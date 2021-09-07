@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 from .config import *
-import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
@@ -26,7 +25,7 @@ SECRET_KEY = SECRET_KEY_ENV
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['krenv.eba-gri6uaer.us-east-1.elasticbeanstalk.com','*']
+ALLOWED_HOSTS = ['krenv.eba-gri6uaer.us-east-1.elasticbeanstalk.com']
 
 
 # Application definition
@@ -89,25 +88,39 @@ AUTH_USER_MODEL = 'user.User'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {
+if 'RDS_DB_NAME' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ['RDS_DB_NAME'],
+            'USER': os.environ['RDS_USERNAME'],
+            'PASSWORD': os.environ['RDS_PASSWORD'],
+            'HOST': os.environ['RDS_HOSTNAME'],
+            'PORT': os.environ['RDS_PORT'],
+        }
+    }
+else:
+    DATABASES = {
 
-    'default': {
+        'default': {
 
-        'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': 'django.db.backends.postgresql',
 
-        'NAME': DB_NAME,
+            'NAME': DB_NAME,
 
-        'USER': DB_USER,
+            'USER': DB_USER,
 
-        'PASSWORD': DB_PASSWORD,
+            'PASSWORD': DB_PASSWORD,
 
-        'HOST': DB_HOST,
+            'HOST': DB_HOST,
 
-        'PORT': DB_PORT,
+            'PORT': DB_PORT,
+
+        }
 
     }
 
-}
+
 
 
 
